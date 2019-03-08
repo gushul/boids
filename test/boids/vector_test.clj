@@ -32,4 +32,7 @@
     (is (= 29
            (mag-sq [5 2])))))
 
-()
+(deftest mag-test
+ (testing "vector.mag test"
+   (is (= 29
+          (mag [2 4]))) ))
