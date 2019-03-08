@@ -7,4 +7,5 @@
                  [generateme/fastmath "1.3.0-SNAPSHOT"]
                  [clojure2d "1.2.0-SNAPSHOT"]]
   :main boids.core/main
+  :repl-options { :init-ns boids.core }
   )
