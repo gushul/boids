@@ -14,9 +14,9 @@
 (def my-canvas (canvas 600 600))
 
 ;; create window
-(def window (show-window my-canvas "Hello World!"))
+; (def window (show-window my-canvas "Hello World!"))
 
-;; draw rectangle with line wrapping with threading canvas context
+; draw rectangle with line wrapping with threading canvas context
 (with-canvas-> my-canvas ;; prepare drawing context in canvas
   (set-background 10 5 5) ;; clear background
   (set-color 210 210 200) ;; set color
@@ -65,8 +65,10 @@
 ;; run twice!
 (def window (show-window (canvas 600 600) "Rotating square" draw)) ;; create canvas, display window and draw on canvas via draw function (60 fps)
 
+(defn main [] window)
+
 ;; save on space pressed (be aware that saving is not synchronized with drawing. Occassional glitches may appear.
-(defmethod key-pressed ["Rotating square" \space] [_ _] 
+(defmethod key-pressed ["Rotating square" \space] [_ _]
   (save (resize (get-image window) 300 300) "rotating.jpg"))
 
 ;; [[../results/ex00/rotating.jpg]]
