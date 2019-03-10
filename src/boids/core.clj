@@ -35,14 +35,7 @@
     {:position [(rand-int width) (rand-int height)],
      :acceleration [0 0],
      :velocity [(Math/cos angle) (Math/sin angle)],
-     }
-    ))
-
-(defn init []
-  (repeatedly 10 (init-boid canvas-width canvas-height))
-  )
-
-
+     }))
 
 (defn separate [boid boids]
   (let [desiredseparation 25.0
@@ -78,10 +71,32 @@
             )
          steer)))
 
+(defn cohesion [boid boids]
+  (let [neighbordist 50
+        [sum count] (reduce (fn [[sum count] boid']
+                              (let [d (v/dist (:position boid)
+                                              (:position boid'))]
+                                (if (and (> d 0) (< d neighbordist))
+                                  [(v/add sum (:position boid')) (inc count)]
+                                  [sum count]
+                                  )))
+                            [[0 0] 0] boids)
+        seek (fn [target boid]
+               (-> target
+                   (v/sub (:position boid))
+                   v/normalize
+                   (v/mult MAX_SPEED)
+                   (v/sub (:velocity boid))
+                   (v/limit MAX_FORCE)))
+        ]
+    (if (> count 0)
+      (seek (v/div sum count) boid)
+      [0 0]
+      )))
+
 (defn flock [boid boids]
-
-
-)
+  boid
+  )
 
 (defn draw
   "Some function decription."
