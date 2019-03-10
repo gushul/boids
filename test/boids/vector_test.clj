@@ -29,10 +29,15 @@
 
 (deftest mag-sq-test
   (testing "vector.mag-sq test"
-    (is (= 29
-           (mag-sq [5 2])))))
+    (is (= 10
+           (mag-sq [1 3])))))
 
 (deftest mag-test
- (testing "vector.mag test"
-   (is (= 29
-          (mag [2 4]))) ))
+  (testing "vector.mag test"
+    (is (= 3.0
+           (mag [3 0])))))
+
+(deftest normalize-test
+  (testing "vector.normalize"
+    (is (= [0.9486832980505138 0.31622776601683794]
+           (normalize (3 1))))))
