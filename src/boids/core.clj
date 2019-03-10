@@ -16,16 +16,16 @@
 (def canvas-height 600)
 (def boid-radius 10)
 
-(defn draw-boid [canvas radius {:keys [x y direction]}]
+(defn draw-boid [canvas radius {:keys [position velocity]}]
   (let [sides 3
         a (/ (* m/PI 2) sides)
+        [x y] position
+        direction (v/heading velocity)
         coordinates (map #(list (+ x (* radius (m/cos (+ direction (* a %)))))
                                 (+ y (* radius (m/sin (+ direction (* a %))))))
                          (range sides)) 
         ]
-    (apply triangle canvas (flatten coordinates))
-    )
-  )
+    (apply triangle canvas (flatten coordinates))))
 
 (defn init-boid [width height]
   (let [angle (rand Math/PI)]
@@ -34,12 +34,7 @@
      :velocity [(Math/cos angle) (Math/sin angle)],
      :r 2.0,
      :maxspeed 2,
-     :maxforce 0.03}
-    ))
-
-(defn init []
-  (repeatedly 10 (init-boid canvas-width canvas-height))
-  )
+     :maxforce 0.03})) 
 
 (defn separate [boid boids]
   (let [desiredseparation 25.0
@@ -47,12 +42,10 @@
         count 0 ;; how many many boids in the vicinity
         ]
     
-    )
-  
-  )
+    ))
 
 (defn flock [boid boids]
-  
+  boid
   )
 
 (defn draw
@@ -64,9 +57,9 @@
 
   (set-background canvas :white)
   (set-color canvas :black)
-  (doseq [boid (state)] (draw-boid canvas boid-radius boid)) 
+  (doseq [boid state] (draw-boid canvas boid-radius boid)) 
 
-  (map #(flock % boids) boids)
+  (map #(flock % state) state)
   )
 
 ;; create canvas, display window and draw on canvas via draw function (60 fps) 
@@ -75,7 +68,7 @@
                           :window-name "Boids simulation.",
                           :fps 25,
                           :draw-fn draw,
-                          :setup #(init)}))
+                          :setup (fn [canvas window] (repeatedly 10 #(init-boid canvas-width canvas-height)))}))
 
 (defn main [] window)
 

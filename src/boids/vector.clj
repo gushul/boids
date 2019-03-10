@@ -1,10 +1,10 @@
 (ns boids.vector)
 
-(defn add [v1 v2]
-  (vec (map + v1 v2)))
+(defn add [[x1 y1] [x2 y2]]
+  [(+ x1 x2) (+ y1 y2)])
 
-(defn sub [v1 v2]
-  (vec (map - v1 v2)))
+(defn sub [[x1 y1] [x2 y2]]
+  [(- x1 x2) (- y1 y2)])
 
 (defn mult [[x y] n]
   [(* x n) (* y n)])
@@ -12,8 +12,10 @@
 (defn div [[x y] n]
   [(/ x n) (/ y n)])
 
-(defn dot [v1 v2]
-  (reduce + (map * v1 v2)))
+(defn dot [[x1 y1] [x2 y2]]
+  (+
+    (* x1 x2)
+    (* y1 y2)))
 
 (defn mag-sq [xy]
   (dot xy xy))
@@ -54,8 +56,7 @@
   (let [theta (* 2 Math/PI (rand))]
     [(* n (Math/sin theta)) (* n (Math/cos theta))]))
 
-(defn make-vector [x y]
-  [x y])
+(defn make-vector [x y] [x y])
 
 (defn add-all [vectors]
   (loop [vs vectors
