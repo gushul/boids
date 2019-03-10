@@ -15,6 +15,9 @@
 (def canvas-width 800)
 (def canvas-height 600)
 (def boid-radius 10)
+(def MAX_SPEED 2)
+(def MAX_FORCE 0.03)
+(def BOID_SIZE 2.0)
 
 (defn draw-boid [canvas radius {:keys [position velocity]}]
   (let [sides 3
@@ -23,7 +26,7 @@
         direction (v/heading velocity)
         coordinates (map #(list (+ x (* radius (m/cos (+ direction (* a %)))))
                                 (+ y (* radius (m/sin (+ direction (* a %))))))
-                         (range sides)) 
+                         (range sides))
         ]
     (apply triangle canvas (flatten coordinates))))
 
@@ -32,21 +35,53 @@
     {:position [(rand-int width) (rand-int height)],
      :acceleration [0 0],
      :velocity [(Math/cos angle) (Math/sin angle)],
-     :r 2.0,
-     :maxspeed 2,
-     :maxforce 0.03})) 
+     }
+    ))
+
+(defn init []
+  (repeatedly 10 (init-boid canvas-width canvas-height))
+  )
+
+
 
 (defn separate [boid boids]
   (let [desiredseparation 25.0
-        steer [0 0 0]
+        steer [0 0]
         count 0 ;; how many many boids in the vicinity
         ]
-    
-    ))
+        (for [b boids]
+          (let [d (v/dist (:position boid)
+                       (:position b))]
+
+            (if (and (> d 0) (< d desiredseparation ))
+              (let [diff (-> (v/sub (:position boid)
+                                       (:position b))
+                             v/normalize
+                             (v/div d))
+                    (swap! steer (v/add steer diff))
+                    (swap! count (inc count))
+
+                    ])
+              )
+          )
+        )
+        (swap! steer (if (> count 0)
+          (v/div steer count)
+          steer)
+        )
+        (if (> (v.mag(steer) 0))
+          (-> steer
+            (v/normalize)
+            (v/mult MAX_SPEED)
+            (v/sub (:velocity boid))
+            (v/limit MAX_FORCE)
+            )
+         steer)))
 
 (defn flock [boid boids]
-  boid
-  )
+
+
+)
 
 (defn draw
   "Some function decription."
@@ -57,12 +92,12 @@
 
   (set-background canvas :white)
   (set-color canvas :black)
-  (doseq [boid state] (draw-boid canvas boid-radius boid)) 
+  (doseq [boid state] (draw-boid canvas boid-radius boid))
 
   (map #(flock % state) state)
   )
 
-;; create canvas, display window and draw on canvas via draw function (60 fps) 
+;; create canvas, display window and draw on canvas via draw function (60 fps)
 ;; show-window {:keys [canvas window-name w h fps draw-fn state draw-state setup hint refresher always-on-top? background]
 (def window (show-window {:canvas (canvas canvas-width canvas-height),
                           :window-name "Boids simulation.",
