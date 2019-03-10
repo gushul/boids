@@ -202,7 +202,7 @@ class Boid {
   // Cohesion: For the average position (i.e. center) of all nearby boids, calculate steering vector towards that position
   PVector cohesion (ArrayList<Boid> boids) { // {{{
     float neighbordist = 50;
-    PVector sum = new PVector(0, 0);   // Start with empty vector to accumulate all positions
+    PVector sum = new PVector(0, 0); // Start with empty vector to accumulate all positions
     int count = 0;
     for (Boid other : boids) {
       float d = PVector.dist(position, other.position);
@@ -213,7 +213,7 @@ class Boid {
     }
     if (count > 0) {
       sum.div(count);
-      return seek(sum);  // Steer towards the position
+      return seek(sum); // Steer towards the position
     } 
     else {
       return new PVector(0, 0);
