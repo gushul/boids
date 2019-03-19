@@ -37,39 +37,39 @@
      :velocity [(Math/cos angle) (Math/sin angle)],
      }))
 
-(defn separate [boid boids]
-  (let [desiredseparation 25.0
-        steer [0 0]
-        count 0 ;; how many many boids in the vicinity
-        ]
-        (for [b boids]
-          (let [d (v/dist (:position boid)
-                       (:position b))]
-
-            (if (and (> d 0) (< d desiredseparation ))
-              (let [diff (-> (v/sub (:position boid)
-                                       (:position b))
-                             v/normalize
-                             (v/div d))
-                    (swap! steer (v/add steer diff))
-                    (swap! count (inc count))
-
-                    ])
-              )
-          )
-        )
-        (swap! steer (if (> count 0)
-          (v/div steer count)
-          steer)
-        )
-        (if (> (v.mag(steer) 0))
-          (-> steer
-            (v/normalize)
-            (v/mult MAX_SPEED)
-            (v/sub (:velocity boid))
-            (v/limit MAX_FORCE)
-            )
-         steer)))
+;; (defn separate [boid boids]
+;;   (let [desiredseparation 25.0
+;;         steer [0 0]
+;;         count 0 ;; how many many boids in the vicinity
+;;         ]
+;;         (for [b boids]
+;;           (let [d (v/dist (:position boid)
+;;                        (:position b))]
+;;
+;;             (if (and (> d 0) (< d desiredseparation ))
+;;               (let [diff (-> (v/sub (:position boid)
+;;                                        (:position b))
+;;                              v/normalize
+;;                              (v/div d))
+;;                     (swap! steer (v/add steer diff))
+;;                     (swap! count (inc count))
+;;
+;;                     ])
+;;               )
+;;           )
+;;         )
+;;         (swap! steer (if (> count 0)
+;;           (v/div steer count)
+;;           steer)
+;;         )
+;;         (if (> (v.mag(steer) 0))
+;;           (-> steer
+;;             (v/normalize)
+;;             (v/mult MAX_SPEED)
+;;             (v/sub (:velocity boid))
+;;             (v/limit MAX_FORCE)
+;;             )
+;;          steer)))
 
 (defn cohesion [boid boids]
   (let [neighbordist 50
@@ -95,8 +95,15 @@
       )))
 
 (defn flock [boid boids]
-  boid
-  )
+  (let [separation (v/mult (:acceleration boid) 0.0)
+        alignment  (v/mult (:acceleration boid) 0.0)
+        coherence  (v/mult (cohesion boid boids) 1.0)
+        acceleration (-> (:acceleration boid)
+                         (v/add separation)
+                         (v/add alignment)
+                         (v/add coherence))
+        ]
+    (assoc boid :acceleration acceleration)))
 
 (defn draw
   "Some function decription."
@@ -109,8 +116,7 @@
   (set-color canvas :black)
   (doseq [boid state] (draw-boid canvas boid-radius boid))
 
-  (map #(flock % state) state)
-  )
+  (map #(flock % state) state))
 
 ;; create canvas, display window and draw on canvas via draw function (60 fps)
 ;; show-window {:keys [canvas window-name w h fps draw-fn state draw-state setup hint refresher always-on-top? background]
@@ -120,5 +126,5 @@
                           :draw-fn draw,
                           :setup (fn [canvas window] (repeatedly 10 #(init-boid canvas-width canvas-height)))}))
 
-(defn main [] window)
-
+(defn main []
+  window)
