@@ -45,7 +45,7 @@
 ;;         (for [b boids]
 ;;           (let [d (v/dist (:position boid)
 ;;                        (:position b))]
-;; 
+;;
 ;;             (if (and (> d 0) (< d desiredseparation ))
 ;;               (let [diff (-> (v/sub (:position boid)
 ;;                                        (:position b))
@@ -53,7 +53,7 @@
 ;;                              (v/div d))
 ;;                     (swap! steer (v/add steer diff))
 ;;                     (swap! count (inc count))
-;; 
+;;
 ;;                     ])
 ;;               )
 ;;           )
@@ -95,9 +95,9 @@
 ;;       )))
 
 (defn flock [boid boids]
-  (let [separation (v/mult boid 1.0)
-        alignment  (v/mult boid 1.0)
-        coherence  (v/mult boid 1.0)
+  (let [separation (v/mult (:acceleration boid) 1.0)
+        alignment  (v/mult (:acceleration boid) 1.0)
+        coherence  (v/mult (:acceleration boid) 1.0)
         acceleration (-> (:acceleration boid)
                          (v/add separation)
                          (v/add alignment)
