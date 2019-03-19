@@ -73,31 +73,31 @@
 
 (defn cohesion [boid boids]
   (let [neighbordist 50
-         [sum count] (reduce (fn [[sum count] boid']
-                               (let [d (v/dist (:position boid)
-                                               (:position boid'))]
+        [sum count] (reduce (fn [[sum count] boid']
+                              (let [d (v/dist (:position boid)
+                                              (:position boid'))]
                                 (if (and (> d 0) (< d neighbordist))
                                   [(v/add sum (:position boid')) (inc count)]
                                   [sum count]
-                                   )))
+                                  )))
                             [[0 0] 0] boids)
-         seek (fn [target boid]
+        seek (fn [target boid]
                (-> target
-                    (v/sub (:position boid))
-                    v/normalize
-                    (v/mult MAX_SPEED)
-                    (v/sub (:velocity boid))
-                    (v/limit MAX_FORCE)))
-         ]
-     (if (> count 0)
-       (seek (v/div sum count) boid)
-       [0 0]
+                   (v/sub (:position boid))
+                   v/normalize
+                   (v/mult MAX_SPEED)
+                   (v/sub (:velocity boid))
+                   (v/limit MAX_FORCE)))
+        ]
+    (if (> count 0)
+      (seek (v/div sum count) boid)
+      [0 0]
       )))
 
 (defn flock [boid boids]
-  (let [separation (v/mult (:acceleration boid) 1.0)
-        alignment  (v/mult (:acceleration boid) 1.0)
-        coherence  (cohesion  boid boids)
+  (let [separation (v/mult (:acceleration boid) 0.0)
+        alignment  (v/mult (:acceleration boid) 0.0)
+        coherence  (v/mult (cohesion boid boids) 1.0)
         acceleration (-> (:acceleration boid)
                          (v/add separation)
                          (v/add alignment)
