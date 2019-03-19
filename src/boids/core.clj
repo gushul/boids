@@ -105,6 +105,15 @@
         ]
     (assoc boid :acceleration acceleration)))
 
+(defn update-boid [boid]
+  (-> boid
+      (update :velocity v/add (:acceleration boid))
+      (update :velocity v/limit MAX_SPEED)
+      (update :position v/add (:velocity boid))
+      (update :acceleration v/mult 0)
+      )
+  )
+
 (defn draw
   "Some function decription."
   [canvas ;; canvas to draw on
