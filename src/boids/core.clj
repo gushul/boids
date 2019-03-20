@@ -31,45 +31,66 @@
     (apply triangle canvas (flatten coordinates))))
 
 (defn init-boid [width height]
-  (let [angle (rand Math/PI)]
+  (let [angle (rand (* Math/PI 2))]
     {:position [(rand-int width) (rand-int height)],
      :acceleration [0 0],
      :velocity [(Math/cos angle) (Math/sin angle)],
      }))
 
-;; (defn separate [boid boids]
-;;   (let [desiredseparation 25.0
-;;         steer [0 0]
-;;         count 0 ;; how many many boids in the vicinity
-;;         ]
-;;         (for [b boids]
-;;           (let [d (v/dist (:position boid)
-;;                        (:position b))]
-;;
-;;             (if (and (> d 0) (< d desiredseparation ))
-;;               (let [diff (-> (v/sub (:position boid)
-;;                                        (:position b))
-;;                              v/normalize
-;;                              (v/div d))
-;;                     (swap! steer (v/add steer diff))
-;;                     (swap! count (inc count))
-;;
-;;                     ])
-;;               )
-;;           )
-;;         )
-;;         (swap! steer (if (> count 0)
-;;           (v/div steer count)
-;;           steer)
-;;         )
-;;         (if (> (v.mag(steer) 0))
-;;           (-> steer
-;;             (v/normalize)
-;;             (v/mult MAX_SPEED)
-;;             (v/sub (:velocity boid))
-;;             (v/limit MAX_FORCE)
-;;             )
-;;          steer)))
+(defn separate [boid boids]
+  (let [desiredseparation 25
+        [steer count] (reduce (fn [[steer count] boid']
+                              (let [d (v/dist (:position boid)
+                                              (:position boid'))]
+                                (if (and (> d 0) (< d desiredseparation))
+                                  [(-> (v/sub (:position boid) (:position boid'))
+                                       v/normalize
+                                       (v/div d)
+                                       (v/add steer))
+                                   (inc count)]
+                                  [steer count]
+                                  )))
+                            [[0 0] 0] boids)
+
+        steer_average (if (> count 0)
+                        (v/div steer count)
+                        steer)
+
+        steering (fn [steer]
+                   (-> steer
+                       v/normalize
+                       (v/mult MAX_SPEED)
+                       (v/sub (:velocity boid))
+                       (v/limit MAX_FORCE)))
+        ]
+    (if (> (v/mag steer_average) 0)
+      (steering steer_average)
+      steer_average
+      ))
+  )
+
+(defn align [boid boids]
+  (let [neighbordist 50
+        [sum count] (reduce (fn [[sum count] boid']
+                              (let [d (v/dist (:position boid)
+                                              (:position boid'))]
+                                (if (and (> d 0) (< d neighbordist))
+                                  [(v/add sum (:position boid')) (inc count)]
+                                  [sum count]
+                                  )))
+                            [[0 0] 0] boids)
+        line-up (fn [target boid]
+                  (-> sum
+                      v/normalize
+                      (v/mult MAX_SPEED)
+                      (v/sub (:velocity boid))
+                      (v/limit MAX_FORCE)))
+        ]
+    (if (> count 0)
+      (line-up (v/div sum count) boid)
+      [0 0]
+      ))
+  )
 
 (defn cohesion [boid boids]
   (let [neighbordist 50
@@ -95,8 +116,8 @@
       )))
 
 (defn flock [boid boids]
-  (let [separation (v/mult (:acceleration boid) 0.0)
-        alignment  (v/mult (:acceleration boid) 0.0)
+  (let [separation (v/mult (separate boid boids) 1.5)
+        alignment  (v/mult (align boid boids) 1.0)
         coherence  (v/mult (cohesion boid boids) 1.0)
         acceleration (-> (:acceleration boid)
                          (v/add separation)
@@ -111,29 +132,58 @@
       (update :velocity v/limit MAX_SPEED)
       (update :position v/add (:velocity boid))
       (update :acceleration v/mult 0)
-      )
-  )
+      ))
+
+(defn borders [boid]
+ (-> boid
+    (update :position (fn [[x y]]
+                        (let [x' (if (< x (- BOID_SIZE))
+                                   (+ canvas-width BOID_SIZE)
+                                   x)
+                              y' (if (< y (- BOID_SIZE))
+                                   (+ canvas-height BOID_SIZE)
+                                   y)
+                              ]
+                          [x' y']
+                          )))
+    (update :position (fn [[x y]]
+                        (let [x' (if (> x (+ canvas-width BOID_SIZE))
+                                   (- BOID_SIZE)
+                                   x)
+                              y' (if (> y (+ canvas-height BOID_SIZE))
+                                   (- BOID_SIZE)
+                                   y)
+                              ]
+                          [x' y']
+                          )))))
+
+(defn run [boid boids]
+  (-> boid
+      (flock boids)
+      update-boid
+      borders
+      ))
 
 (defn draw
   "Some function decription."
   [canvas ;; canvas to draw on
    window ;; window bound to function (for mouse movements)
    ^long framecount ;; frame number
-   state] ;; state (if any)
+   boids] ;; state (if any)
 
   (set-background canvas :white)
   (set-color canvas :black)
-  (doseq [boid state] (draw-boid canvas boid-radius boid))
+  (doseq [boid boids] (draw-boid canvas boid-radius boid))
 
-  (map #(flock % state) state))
+  (map #(run % boids) boids))
 
 ;; create canvas, display window and draw on canvas via draw function (60 fps)
 ;; show-window {:keys [canvas window-name w h fps draw-fn state draw-state setup hint refresher always-on-top? background]
 (def window (show-window {:canvas (canvas canvas-width canvas-height),
                           :window-name "Boids simulation.",
-                          :fps 25,
+                          :fps 60,
                           :draw-fn draw,
-                          :setup (fn [canvas window] (repeatedly 10 #(init-boid canvas-width canvas-height)))}))
+                          :setup (fn [canvas window] (repeatedly 100 #(init-boid canvas-width canvas-height)))}))
 
 (defn main []
   window)
