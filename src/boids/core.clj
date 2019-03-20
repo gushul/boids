@@ -31,7 +31,7 @@
     (apply triangle canvas (flatten coordinates))))
 
 (defn init-boid [width height]
-  (let [angle (rand Math/PI)]
+  (let [angle (rand (* Math/PI 2))]
     {:position [(rand-int width) (rand-int height)],
      :acceleration [0 0],
      :velocity [(Math/cos angle) (Math/sin angle)],
@@ -119,13 +119,13 @@
   [canvas ;; canvas to draw on
    window ;; window bound to function (for mouse movements)
    ^long framecount ;; frame number
-   state] ;; state (if any)
+   boids] ;; state (if any)
 
   (set-background canvas :white)
   (set-color canvas :black)
-  (doseq [boid state] (draw-boid canvas boid-radius boid))
+  (doseq [boid boids] (draw-boid canvas boid-radius boid))
 
-  (map #(flock % state) state))
+  (map #(update-boid (flock % boids)) boids))
 
 ;; create canvas, display window and draw on canvas via draw function (60 fps)
 ;; show-window {:keys [canvas window-name w h fps draw-fn state draw-state setup hint refresher always-on-top? background]
