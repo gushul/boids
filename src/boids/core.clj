@@ -111,8 +111,37 @@
       (update :velocity v/limit MAX_SPEED)
       (update :position v/add (:velocity boid))
       (update :acceleration v/mult 0)
-      )
-  )
+      ))
+
+(defn borders [boid]
+ (-> boid
+    (update :position (fn [[x y]]
+                        (let [x' (if (< x (- BOID_SIZE))
+                                   (+ canvas-width BOID_SIZE)
+                                   x)
+                              y' (if (< y (- BOID_SIZE))
+                                   (+ canvas-height BOID_SIZE)
+                                   y)
+                              ]
+                          [x' y']
+                          )))
+    (update :position (fn [[x y]]
+                        (let [x' (if (> x (+ canvas-width BOID_SIZE))
+                                   (- BOID_SIZE)
+                                   x)
+                              y' (if (> y (+ canvas-height BOID_SIZE))
+                                   (- BOID_SIZE)
+                                   y)
+                              ]
+                          [x' y']
+                          )))))
+
+(defn run [boid boids]
+  (-> boid
+      (flock boids)
+      update-boid
+      borders
+      ))
 
 (defn draw
   "Some function decription."
@@ -125,13 +154,13 @@
   (set-color canvas :black)
   (doseq [boid boids] (draw-boid canvas boid-radius boid))
 
-  (map #(update-boid (flock % boids)) boids))
+  (map #(run % boids) boids))
 
 ;; create canvas, display window and draw on canvas via draw function (60 fps)
 ;; show-window {:keys [canvas window-name w h fps draw-fn state draw-state setup hint refresher always-on-top? background]
 (def window (show-window {:canvas (canvas canvas-width canvas-height),
                           :window-name "Boids simulation.",
-                          :fps 25,
+                          :fps 60,
                           :draw-fn draw,
                           :setup (fn [canvas window] (repeatedly 10 #(init-boid canvas-width canvas-height)))}))
 
